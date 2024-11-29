@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqlserver-db
+  template:
+    metadata:
+      labels:
+        app: sqlserver-db
+    spec:
+      containers:
+        - name: sqlserver-db
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              value: "YourStrong!Passw0rd"
+          ports:
+            - containerPort: 1433
+          volumeMounts:
+            - name: sqlserver-data
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: sqlserver-data
+          persistentVolumeClaim:
+            claimName: sqlserver-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver-db
+spec:
+  selector:
+    app: sqlserver-db
+  ports:
+    - protocol: TCP
+      port: 1433
+      targetPort: 1433
+  clusterIP: None

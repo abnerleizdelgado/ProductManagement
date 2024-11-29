@@ -1,0 +1,46 @@
+services:
+
+  sqlserver-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong!Passw0rd
+    ports:
+      - "1433:1433"
+    networks:
+      - product-management-network
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  api:
+    image: ${DOCKER_REGISTRY-}api
+    build:
+      context: .
+      dockerfile: Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - product-management-network
+    ports:
+      - "5000:80"
+    depends_on:
+      - sqlserver-db
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "5174:5174"
+    networks:
+      - product-management-network
+    depends_on:
+      - api
+
+networks:
+  product-management-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
+
